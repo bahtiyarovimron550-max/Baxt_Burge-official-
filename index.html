@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baxt Burger - Milliy Mini App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@600;700&family=Noto+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #0b2417; 
+            color: #fef08a; 
+            font-family: 'Noto Sans', sans-serif;
+            background-image: radial-gradient(#15803d 0.75px, transparent 0.75px);
+            background-size: 16px 16px;
+        }
+        .header-title { font-family: 'Comfortaa', cursive; }
+    </style>
+</head>
+<body class="pb-28">
+
+    <!-- Header -->
+    <header class="p-4 bg-[#071910] border-b-2 border-amber-500/40 sticky top-0 z-50 flex justify-between items-center shadow-lg">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🕌</span>
+            <div>
+                <h1 class="text-xl font-bold text-amber-400 header-title tracking-wide">BAXT BURGER</h1>
+                <p class="text-[10px] text-amber-200/70 uppercase tracking-widest">Lazzatli & Barkamol</p>
+            </div>
+        </div>
+        <div class="relative">
+            <span class="text-2xl">🧺</span>
+            <span id="cart-badge" class="absolute -top-2 -right-2 bg-amber-500 text-black font-bold text-xs w-5 h-5 rounded-full flex items-center justify-center border border-black">0</span>
+        </div>
+    </header>
+
+    <!-- Banner -->
+    <div class="m-4 p-4 rounded-2xl bg-gradient-to-r from-amber-900/40 via-emerald-900/60 to-amber-900/40 border border-amber-500/30 text-center relative overflow-hidden">
+        <p class="text-amber-300 font-semibold text-sm">Xush kelibsiz, aziz mehmonga! ✨</p>
+        <p class="text-xs text-amber-100/80 mt-0.5">Maza va sifat uyg'unligi siz uchun 🍔🌯🍕</p>
+    </div>
+
+    <!-- Категории -->
+    <div class="flex overflow-x-auto px-4 gap-2 scrollbar-none py-1">
+        <button onclick="filterCategory('all')" class="category-btn px-4 py-2 bg-amber-500 text-black font-bold rounded-xl text-xs whitespace-nowrap shadow-md">Barchasi</button>
+        <button onclick="filterCategory('lavash')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">Lavashlar</button>
+        <button onclick="filterCategory('donar')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">Donar</button>
+        <button onclick="filterCategory('burger')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">Burgerlar</button>
+        <button onclick="filterCategory('hotdog')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">Хот-дог & Хагги</button>
+        <button onclick="filterCategory('pizza')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">Пицца</button>
+        <button onclick="filterCategory('milliy')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">Главные блюда</button>
+        <button onclick="filterCategory('kfc')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">KFC & Фри</button>
+        <button onclick="filterCategory('drinks')" class="category-btn px-4 py-2 bg-[#123824] border border-amber-500/30 text-amber-200 rounded-xl text-xs whitespace-nowrap">Напитки</button>
+    </div>
+
+    <!-- Карточки с товарами -->
+    <main class="p-4 grid grid-cols-2 gap-3" id="product-list"></main>
+
+    <!-- Корзина -->
+    <div id="cart-bar" class="fixed bottom-0 left-0 right-0 bg-[#071910] border-t-2 border-amber-500/50 p-4 hidden justify-between items-center z-50 shadow-2xl">
+        <div>
+            <p class="text-[11px] text-amber-200/70">Dasturxon jami summasi:</p>
+            <p id="total-price" class="text-base font-bold text-amber-400">0 so'm</p>
+        </div>
+        <button onclick="checkout()" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold px-5 py-2.5 rounded-xl transition shadow-lg text-sm flex items-center gap-2">
+            <span>Buyurtma qilish</span> 🚀
+        </button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Полное меню с фото для каждого блюда
+        const products = [
+            // 1. ЛАВАШ
+            { id: 1, name: "ЛАВАШ", price: 36000, category: "lavash", img: "https://images.unsplash.com/photo-1561651823-34feb02250e4?w=400&q=80" },
+            { id: 2, name: "ЛАВАШ СЫРНЫЙ", price: 38000, category: "lavash", img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400&q=80" },
+            { id: 3, name: "ЛАВАШ ЗАКАЗ", price: 45000, category: "lavash", img: "https://images.unsplash.com/photo-1561651823-34feb02250e4?w=400&q=80" },
+            { id: 4, name: "ЛАВАШ МЕГА", price: 60000, category: "lavash", img: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=400&q=80" },
+            { id: 5, name: "ТОВУҚ ЛАВАШ", price: 28000, category: "lavash", img: "https://images.unsplash.com/photo-1561651823-34feb02250e4?w=400&q=80" },
+            { id: 6, name: "ТАНДИР ЛАВАШ (30 см)", price: 56000, category: "lavash", img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400&q=80" },
+            { id: 7, name: "ТАНДИР ЛАВАШ (40 см)", price: 70000, category: "lavash", img: "https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=400&q=80" },
+
+            // 2. ДОНАР
+            { id: 8, name: "ДОНАР МИНИ", price: 30000, category: "donar", img: "https://images.unsplash.com/photo-1662116765994-1e2238448109?w=400&q=80" },
+            { id: 9, name: "ДОНАР КАЗИ", price: 45000, category: "donar", img: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&q=80" },
+            { id: 10, name: "ДОНАР", price: 36000, category: "donar", img: "https://images.unsplash.com/photo-1662116765994-1e2238448109?w=400&q=80" },
+            { id: 11, name: "ДОНАР СЫРНЫЙ", price: 38000, category: "donar", img: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&q=80" },
+            { id: 12, name: "ДОНАР МЕГА", price: 40000, category: "donar", img: "https://images.unsplash.com/photo-1662116765994-1e2238448109?w=400&q=80" },
+            { id: 13, name: "ДОНАР ЗАКАЗ", price: 45000, category: "donar", img: "https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&q=80" },
+
+            // 3. БУРГЕРЫ
+            { id: 14, name: "ГАМБУРГЕР", price: 36000, category: "burger", img: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&q=80" },
+            { id: 15, name: "ЧИЗБУРГЕР", price: 38000, category: "burger", img: "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?w=400&q=80" },
+            { id: 16, name: "ДАБЛ БУРГЕР", price: 45000, category: "burger", img: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?w=400&q=80" },
+
+            // 4. ХОТ-ДОГ & ХАГГИ
+            { id: 17, name: "ХОТ-ДОГ", price: 24000, category: "hotdog", img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=400&q=80" },
+            { id: 18, name: "БИГ ХОТ-ДОГ", price: 28000, category: "hotdog", img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=400&q=80" },
+            { id: 19, name: "ДОНАР ХОТ-ДОГ", price: 24000, category: "hotdog", img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=400&q=80" },
+            { id: 20, name: "БИГ ДОНАР ХОТ-ДОГ", price: 28000, category: "hotdog", img: "https://images.unsplash.com/photo-1619740455993-9e612b1af08a?w=400&q=80" },
+            { id: 21, name: "ХАГГИ", price: 30000, category: "hotdog", img: "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400&q=80" },
+            { id: 22, name: "ХАГГИ МЕГА", price: 35000, category: "hotdog", img: "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400&q=80" },
+
+            // 5. ПИЦЦА
+            { id: 23, name: "ПИЦЦА МЯСНАЯ (30 см)", price: 85900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 24, name: "ПИЦЦА МЯСНАЯ (35 см)", price: 103900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 25, name: "ПИЦЦА МЯСНАЯ (40 см)", price: 116900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 26, name: "ПИЦЦА ОВОЩНАЯ (30 см)", price: 57900, category: "pizza", img: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400&q=80" },
+            { id: 27, name: "ПИЦЦА ОВОЩНАЯ (35 см)", price: 64900, category: "pizza", img: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400&q=80" },
+            { id: 28, name: "ПИЦЦА ОВОЩНАЯ (40 см)", price: 71900, category: "pizza", img: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400&q=80" },
+            { id: 29, name: "ПИЦЦА БАХТ (30 см)", price: 74900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 30, name: "ПИЦЦА БАХТ (35 см)", price: 84900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 31, name: "ПИЦЦА БАХТ (40 см)", price: 101900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 32, name: "ПИЦЦА С КАЗЫ (30 см)", price: 90900, category: "pizza", img: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400&q=80" },
+            { id: 33, name: "ПИЦЦА С КАЗЫ (35 см)", price: 103900, category: "pizza", img: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400&q=80" },
+            { id: 34, name: "ПИЦЦА С КАЗЫ (40 см)", price: 127900, category: "pizza", img: "https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=400&q=80" },
+            { id: 35, name: "ПИЦЦА МАРГАРИТА (30 см)", price: 59900, category: "pizza", img: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&q=80" },
+            { id: 36, name: "ПИЦЦА МАРГАРИТА (35 см)", price: 64900, category: "pizza", img: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&q=80" },
+            { id: 37, name: "ПИЦЦА МАРГАРИТА (40 см)", price: 72900, category: "pizza", img: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&q=80" },
+            { id: 38, name: "ПИЦЦА 4 СЕЗОНА (30 см)", price: 81900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 39, name: "ПИЦЦА 4 СЕЗОНА (35 см)", price: 96900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 40, name: "ПИЦЦА 4 СЕЗОНА (40 см)", price: 111900, category: "pizza", img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" },
+            { id: 41, name: "ПИЦЦА ПЕППЕРОНИ (30 см)", price: 71900, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80" },
+            { id: 42, name: "ПИЦЦА ПЕППЕРОНИ (35 см)", price: 81900, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80" },
+            { id: 43, name: "ПИЦЦА ПЕППЕРОНИ (40 см)", price: 91900, category: "pizza", img: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80" },
+            { id: 44, name: "ПИДЕ", price: 84900, category: "pizza", img: "https://images.unsplash.com/photo-1628824819838-026a4af23b6b?w=400&q=80" },
+            { id: 45, name: "ХАЧАПУРИ", price: 64900, category: "pizza", img: "https://images.unsplash.com/photo-1628824819838-026a4af23b6b?w=400&q=80" },
+
+            // 6. ГЛАВНЫЕ БЛЮДА & СОМСА
+            { id: 46, name: "ОЛОТ СОМСА ПОРЦИЯ (6 дона)", price: 54000, category: "milliy", img: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80" },
+            { id: 47, name: "СЕНДВИЧ", price: 30000, category: "milliy", img: "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=400&q=80" },
+            { id: 48, name: "ОТИН ЖЎЖА 1 КГ", price: 100000, category: "milliy", img: "https://images.unsplash.com/photo-1598515214211-89d3c73ae83b?w=400&q=80" },
+            { id: 49, name: "КУКСИ", price: 35000, category: "milliy", img: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80" },
+
+            // 7. KFC & ФРИ
+            { id: 50, name: "KFC (НАБОР)", price: 85000, category: "kfc", img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&q=80" },
+            { id: 51, name: "НАГГЕТСЫ (НАБОР)", price: 85000, category: "kfc", img: "https://images.unsplash.com/photo-1562967914-608f82629710?w=400&q=80" },
+            { id: 52, name: "КАРТОШКА ФРИ", price: 20000, category: "kfc", img: "https://images.unsplash.com/photo-1573080496219-bb080dd4f877?w=400&q=80" },
+
+            // 8. НАПИТКИ
+            { id: 53, name: "ЧАЙ", price: 5000, category: "drinks", img: "https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400&q=80" },
+            { id: 54, name: "ЛИМОН ЧАЙ", price: 12000, category: "drinks", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&q=80" },
+            { id: 55, name: "КОФЕ МОЛОЧНЫЙ", price: 7000, category: "drinks", img: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=400&q=80" },
+            { id: 56, name: "КОФЕ ЧЁРНЫЙ", price: 8000, category: "drinks", img: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=400&q=80" },
+            { id: 57, name: "МОХИТО", price: 15000, category: "drinks", img: "https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&q=80" }
+        ];
+
+        let cart = {};
+
+        function renderProducts(filter = 'all') {
+            const list = document.getElementById('product-list');
+            list.innerHTML = '';
+            
+            const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+            
+            filtered.forEach(p => {
+                list.innerHTML += `
+                    <div class="bg-[#0f3521] border border-amber-500/20 rounded-2xl p-2.5 flex flex-col justify-between shadow-md relative overflow-hidden">
+                        <div>
+                            <div class="w-full h-28 rounded-xl mb-2 overflow-hidden border border-amber-500/20 bg-[#081f13]">
+                                <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover">
+                            </div>
+                            <h3 class="font-bold text-xs text-amber-100 mb-1 leading-snug">${p.name}</h3>
+                            <p class="text-amber-400 font-extrabold text-xs">${p.price.toLocaleString()} so'm</p>
+                        </div>
+                        <button onclick="addToCart(${p.id})" class="mt-2.5 w-full bg-amber-500/10 hover:bg-amber-500 hover:text-black border border-amber-500/40 text-amber-300 transition py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1">
+                            <span>Qo'shish</span> ➕
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function filterCategory(cat) {
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-500', 'text-black', 'font-bold');
+                btn.classList.add('bg-[#123824]', 'text-amber-200');
+            });
+            event.target.classList.remove('bg-[#123824]', 'text-amber-200');
+            event.target.classList.add('bg-amber-500', 'text-black', 'font-bold');
+            renderProducts(cat);
+        }
+
+        function addToCart(id) {
+            cart[id] = (cart[id] || 0) + 1;
+            updateCartUI();
+        }
+
+        function updateCartUI() {
+            let totalCount = 0;
+            let totalPrice = 0;
+
+            for (let id in cart) {
+                let p = products.find(item => item.id == id);
+                if (p) {
+                    totalCount += cart[id];
+                    totalPrice += p.price * cart[id];
+                }
+            }
+
+            document.getElementById('cart-badge').innerText = totalCount;
+            document.getElementById('total-price').innerText = totalPrice.toLocaleString() + " so'm";
+            
+            const cartBar = document.getElementById('cart-bar');
+            if (totalCount > 0) {
+                cartBar.classList.remove('hidden');
+                cartBar.classList.add('flex');
+            } else {
+                cartBar.classList.add('hidden');
+                cartBar.classList.remove('flex');
+            }
+        }
+
+        function checkout() {
+            tg.sendData(JSON.stringify(cart));
+            tg.close();
+        }
+
+        renderProducts();
+    </script>
+</body>
+</html>
+
